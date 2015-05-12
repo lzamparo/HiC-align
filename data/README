@@ -1,1 +1,3 @@
 Data directory for storing fixed data sets
+
+- added symbolic links to reference genome, replicate read directories

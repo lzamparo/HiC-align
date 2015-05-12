@@ -1,1 +1,9 @@
 Results directory for tracking computational experiments peformed on data
+(should be reflected in evernote log)
+
+- Downloaded, downloaded and unzipped / untarred Sample_HiC_LY1_[1,2] 
+- downloaded hg19 chromFa.tar.gz from UCSC
+- removed *random.fa, *hap?.fa, chrUn*.fa, chrM.fa
+- create whole genome fasta file: cat `ls -1v` > genome.fa
+- created an index using BWA: cd $PROJECT/data/hg19; bwa index -a bwtsw genome.fa
+- aligned reads to the index: 
