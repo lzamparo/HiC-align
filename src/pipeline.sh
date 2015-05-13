@@ -129,3 +129,22 @@ do
 	fi
 	break;
 done
+
+
+do_align(){
+	outfile=`echo $1 | sed -e 's/R1_//g' -e 's/.fastq.gz/.sam/g'`
+	bwa mem -t 2 "$hg/genome.fa" $1 $2 > $outfile
+}
+export -f do_align
+
+echo "align reads with bwa?"
+select align in "y" "n";
+do
+	if [ "$align" == "y" ]; then
+		cd "$rep_prefix$rep1"
+		r_one=`ls -1 *R1*.fastq.gz`
+		r_two=`ls -1 *R2*.fastq.gz`
+		parallel -j20 --dry-run --progress --xapply do_align ::: $r_one ::: $r_two
+	fi
+	break;
+done
