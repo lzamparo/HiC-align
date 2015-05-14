@@ -130,21 +130,50 @@ do
 	break;
 done
 
-
 do_align(){
 	outfile=`echo $1 | sed -e 's/R1_//g' -e 's/.fastq.gz/.sam/g'`
-	bwa mem -t 2 "$hg/genome.fa" $1 $2 > $outfile
+	bwa mem -t 4 genome.fa $1 $2 > $outfile
 }
 export -f do_align
+
+### make links to genome index files
+make_links(){
+	ln -s "$hg/genome.fa" genome.fa
+	ln -s "$hg/genome.fa.amb" genome.fa.amb
+	ln -s "$hg/genome.fa.ann" genome.fa.ann
+	ln -s "$hg/genome.fa.bwt" genome.fa.bwt
+	ln -s "$hg/genome.fa.pac" genome.fa.pac
+	ln -s "$hg/genome.fa.sa" genome.fa.sa
+}
+
+### remove links
+clean_up_links(){
+	rm genome.fa*
+}
+
+export make_links
+export clean_up_links
 
 echo "align reads with bwa?"
 select align in "y" "n";
 do
 	if [ "$align" == "y" ]; then
+
 		cd "$rep_prefix$rep1"
+		echo "currently in "`pwd`
+		make_links
 		r_one=`ls -1 *R1*.fastq.gz`
 		r_two=`ls -1 *R2*.fastq.gz`
-		parallel -j20 --dry-run --progress --xapply do_align ::: $r_one ::: $r_two
+		parallel -j10 --progress --xapply do_align ::: $r_one ::: $r_two
+		clean_up_links
+
+		cd "$rep_prefix$rep2"
+		echo "currently in "`pwd`
+		make_links
+		r_one=`ls -1 *R1*.fastq.gz`
+                r_two=`ls -1 *R2*.fastq.gz`
+                parallel -j10 --progress --xapply do_align ::: $r_one ::: $r_two
+		clean_up_links
 	fi
 	break;
 done
