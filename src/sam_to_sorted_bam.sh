@@ -56,6 +56,7 @@ sort_index_bam(){
 	echo "samtools sort $1 $outfile"
 	echo "samtools index $outfile"
 }
+export -f sort_index_bam
 
 echo "Sort and index bam files?"
 select sortindex in "y" "n";
