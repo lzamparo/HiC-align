@@ -62,10 +62,10 @@ select sortindex in "y" "n";
 do
 	if [ "$sortindex" == "y" ]; then
 		cd "$rep_prefix$rep1"
-		parallel -j10 --dry-run --progress --xapply sort_index_bam ::: `ls -1 *.bam`
+		parallel -j10 --progress --xapply sort_index_bam ::: `ls -1 *.bam`
 
 		cd "$rep_prefix$rep2"
-		parallel -j10 --dry-run --progress --xapply sort_index_bam ::: `ls -1 *.bam`
+		parallel -j10 --progress --xapply sort_index_bam ::: `ls -1 *.bam`
 
 	fi
 	break;
