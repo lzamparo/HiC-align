@@ -53,8 +53,8 @@ done
 
 sort_index_bam(){
 	outfile=`echo $1 | sed -e 's/.bam/_sorted.bam/g'`
-	echo "samtools sort $1 $outfile"
-	echo "samtools index $outfile"
+	samtools sort $1 $outfile
+	samtools index $outfile
 }
 export -f sort_index_bam
 
