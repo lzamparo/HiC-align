@@ -11,8 +11,8 @@ rep2=$3
 ### convert sam to sorted bam files, filtering the poor quality reads
 
 sam_to_bam(){
-	outfile=`echo $1 | sed -e 's/.sam/.bam/g'`
-	echo "samtools view -bSq $2 $1 > $outfile"
+	outfile=`echo $2 | sed -e 's/.sam/.bam/g'`
+	echo "samtools view -bSq $1 $2 > $outfile"
 	#samtools view -bSq $2 $1 > $outfile 
 }
 
