@@ -1,14 +1,13 @@
-! /bin/bash
+#! /bin/bash
 
 ### try to catch a tonne of errors (h/t Michael Hoffman)
 set -o nounset -o pipefail -o errexit
 
 ### grab genomic locations:
-hg=$1
-rep_prefix=$2
-rep1=$3
-rep2=$4
-min_quality=$5
+rep_prefix=$1
+rep1=$2
+rep2=$3
+min_quality=$4
 
 ### convert sam to sorted bam files, filtering the poor quality reads
 
