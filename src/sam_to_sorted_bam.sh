@@ -28,12 +28,12 @@ do
 		cd "$rep_prefix$rep1"
 		echo "currently in "`pwd`
 		echo "using cutoff score $qval"
-		parallel -j10 --dry-run --progress --xapply sam_to_bam ::: $qval ::: `ls -1 *.sam`
+		parallel -j10 --progress --xapply sam_to_bam ::: $qval ::: `ls -1 *.sam`
 		
 
 		cd "$rep_prefix$rep2"
 		echo "currently in "`pwd`
-		parallel -j10 --dry-run --progress --xapply sam_to_bam ::: $qval ::: `ls -1 *.sam`
+		parallel -j10 --progress --xapply sam_to_bam ::: $qval ::: `ls -1 *.sam`
 	fi
 	break;
 done
@@ -68,6 +68,7 @@ do
 		parallel -j10 --dry-run --progress --xapply sort_index_bam ::: `ls -1 *.bam`
 
 	fi
+	break;
 done
 
 echo "Remove non-indexed bam files?"
@@ -80,5 +81,6 @@ do
 		cd "$rep_prefix$rep2"
 		rm *[0-9].bam
 	fi
+	break;
 done	
 
