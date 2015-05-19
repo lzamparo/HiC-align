@@ -53,7 +53,7 @@ done
 
 sort_index_bam(){
 	outfile=`echo $1 | sed -e 's/.bam/_sorted/g'`
-	samtools sort $1 -o $outfile
+	samtools sort $1 $outfile
 	#index_file="$outfile.bam"
 	#samtools index $outfile
 }
@@ -64,10 +64,10 @@ select sortindex in "y" "n";
 do
 	if [ "$sortindex" == "y" ]; then
 		cd "$rep_prefix$rep1"
-		parallel -j10 --progress --xapply sort_index_bam ::: `ls -1 *.bam`
+		ls -1 *.bam | parallel -j20 --progress sort_index_bam 
 
 		cd "$rep_prefix$rep2"
-		parallel -j10 --progress --xapply sort_index_bam ::: `ls -1 *.bam`
+		ls -1 *.bam | parallel -j20 --progress sort_index_bam
 
 	fi
 	break;
