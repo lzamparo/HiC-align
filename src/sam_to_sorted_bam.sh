@@ -12,8 +12,7 @@ rep2=$3
 
 sam_to_bam(){
 	outfile=`echo $2 | sed -e 's/.sam/.bam/g'`
-	echo "samtools view -bSq $1 $2 > $outfile"
-	#samtools view -bSq $2 $1 > $outfile 
+	samtools view -bSq $1 $2 > $outfile 
 }
 
 export -f sam_to_bam
