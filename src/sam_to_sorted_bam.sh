@@ -7,7 +7,6 @@ set -o nounset -o pipefail -o errexit
 rep_prefix=$1
 rep1=$2
 rep2=$3
-min_quality=$4
 
 ### convert sam to sorted bam files, filtering the poor quality reads
 
@@ -42,7 +41,7 @@ done
 echo "delete sam files?"
 select rmsam in "y" "n";
 do
-	if [ "$rmsam" == "y"]; then
+	if [ "$rmsam" == "y" ]; then
 		cd "$rep_prefix$rep1"
 		rm *.sam
 
@@ -52,11 +51,34 @@ do
 	break;
 done	
 
-sort_sam(){
-
+sort_index_bam(){
+	outfile=`echo $1 | sed -e 's/.bam/_sorted.bam/g'`
+	samtools sort $1 $outfile
+	samtools index $outfile
 }
 
 echo "Sort and index bam files?"
 select sortindex in "y" "n";
 do
 	if [ "$sortindex" == "y" ]; then
+		cd "$rep_prefix$rep1"
+		parallel -j10 --dry-run --progress --xapply sort_index_bam ::: `ls -1 *.bam`
+
+		cd "$rep_prefix$rep2"
+		parallel -j10 --dry-run --progress --xapply sort_index_bam ::: `ls -1 *.bam`
+
+	fi
+done
+
+echo "Remove non-indexed bam files?"
+select rmbam in "y" "n";
+do
+	if [ "$rmbam" == "y" ]; then
+		cd "$rep_prefix$rep1"
+		rm *[0-9].bam
+
+		cd "$rep_prefix$rep2"
+		rm *[0-9].bam
+	fi
+done	
+
