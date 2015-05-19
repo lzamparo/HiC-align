@@ -12,7 +12,8 @@ rep2=$3
 
 sam_to_bam(){
 	outfile=`echo $1 | sed -e 's/.sam/.bam/g'`
-	samtools view -bSq $2 $1 > $outfile 
+	echo "samtools view -bSq $2 $1 > $outfile"
+	#samtools view -bSq $2 $1 > $outfile 
 }
 
 export -f sam_to_bam
@@ -53,8 +54,8 @@ done
 
 sort_index_bam(){
 	outfile=`echo $1 | sed -e 's/.bam/_sorted.bam/g'`
-	samtools sort $1 $outfile
-	samtools index $outfile
+	echo "samtools sort $1 $outfile"
+	echo "samtools index $outfile"
 }
 
 echo "Sort and index bam files?"
