@@ -51,23 +51,21 @@ do
 	break;
 done	
 
-sort_index_bam(){
+sort_bam(){
 	outfile=`echo $1 | sed -e 's/.bam/_sorted/g'`
 	samtools sort $1 $outfile
-	#index_file="$outfile.bam"
-	#samtools index $outfile
 }
-export -f sort_index_bam
+export -f sort_bam
 
-echo "Sort and index bam files?"
-select sortindex in "y" "n";
+echo "Sort bam files?"
+select dosort in "y" "n";
 do
-	if [ "$sortindex" == "y" ]; then
+	if [ "$dosort" == "y" ]; then
 		cd "$rep_prefix$rep1"
-		ls -1 *.bam | parallel -j20 --progress sort_index_bam 
+		ls -1 *.bam | parallel -j20 --progress sort_bam 
 
 		cd "$rep_prefix$rep2"
-		ls -1 *.bam | parallel -j20 --progress sort_index_bam
+		ls -1 *.bam | parallel -j20 --progress sort_bam
 
 	fi
 	break;
@@ -85,4 +83,18 @@ do
 	fi
 	break;
 done	
+
+
+echo "Index sorted bam files?"
+select doindex in "y" "n";
+do
+	if [ "$doindex" == "y" ]; then
+		cd "$rep_prefix$rep1"
+		ls -1 *_sorted.bam | parallel -j20 --progress samtools index 
+
+		cd "$rep_prefix$rep2"
+		ls -1 *_sorted.bam | parallel -j20 --progress samtools index 
+
+	fi
+done
 
