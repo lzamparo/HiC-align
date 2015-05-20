@@ -71,7 +71,7 @@ do
 	break;
 done
 
-echo "Remove non-indexed bam files?"
+echo "Remove unsorted bam files?"
 select rmbam in "y" "n";
 do
 	if [ "$rmbam" == "y" ]; then
