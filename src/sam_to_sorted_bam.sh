@@ -96,5 +96,6 @@ do
 		ls -1 *_sorted.bam | parallel -j20 --progress samtools index 
 
 	fi
+	break;
 done
 
