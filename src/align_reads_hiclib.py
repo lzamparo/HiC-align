@@ -91,7 +91,7 @@ if __name__ == "__main__":
 	parser = argparse.ArgumentParser()
 
 	parser.add_argument("fastqdir", help="parse the fastq files in this dir")
-	parser.add_argument("hg19", default="/home/zamparol/data/hg19/" help="reference genome is located in this dir")
+	parser.add_argument("hg19", default="/home/zamparol/data/hg19/", help="reference genome is located in this dir")
 	parser.add_argument("index", help="the bowtie2 index for hg19 is here")
 	parser.add_argument("samdir", help="put the sam output in this dir")
 	args = parser.parse_args()
