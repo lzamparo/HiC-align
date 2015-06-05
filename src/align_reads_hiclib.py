@@ -4,7 +4,6 @@ import argparse
 import subprocess
 import glob
 from joblib import Parallel, delayed
-import pdb
 
 try:
 	from hiclib import mapping
@@ -14,7 +13,7 @@ except ImportError:
 	os._exit()
 
 
-# with the params established ^, calculate the alignment step size increment
+# calculate the alignment step-size increment
 def calculate_step(length, minlen, approxStep=10, maxSteps=4):
     """returns minimum length and step based on the
     length of sequence and proposed minimum length"""
@@ -34,7 +33,8 @@ def calculate_step(length, minlen, approxStep=10, maxSteps=4):
 
     return minlen, actualStep
 
-# quick sanity check on a given fastq file.  The second line should contain a non-zero length
+# quick sanity check on a given fastq file.  The second line should contain 
+# a sequence of length greater than 10
 def check_len(fastq_file):
 	f = gzip.open(fastq_file, 'r')
 	f.readline()
@@ -46,8 +46,8 @@ def check_len(fastq_file):
 
 
 
-    # map the reads from each paired end reads fastq file (first,second) to 
-    # corresponding .sam files, then store both mapped sam files in an hdf5 file (outfile)
+# map the reads from each paired end reads fastq file (first,second) to 
+# corresponding .sam files, then store both mapped sam files in an hdf5 file (outfile)
 def map_reads(first_fq,second_fq,outfile):
 	min_len, step_size = calculate_step(length - seq_skip_start, min_map_len)
 	first_sam = first_fq.split(".fastq.gz")[0] + ".sam"
@@ -106,8 +106,6 @@ if __name__ == "__main__":
 	# number of threads for bowtie alignment
 	threads = 4
 
-	pdb.set_trace()
-
 	# scratch space for temporary files during mapping, binning
 	tmp_dir = "/home/zamparol/scratch"  
 
@@ -128,7 +126,7 @@ if __name__ == "__main__":
 	outfiles = [f.split("_R1_")[0] + (f.split("_R1")[1]).split(".fastq.gz")[0] + ".hdf5" for f in first_ends]
 
 	# map the reads in parallel:
-	Parallel(n_jobs=8)(delayed(map_reads)(p,q,outf) for p,q,outf in zip(first_ends,second_ends,outfiles))
+	Parallel(n_jobs=4)(delayed(map_reads)(p,q,outf) for p,q,outf in zip(first_ends,second_ends,outfiles))
 	
 
 
