@@ -48,40 +48,40 @@ def check_len(fastq_file):
 
     # map the reads from each paired end reads fastq file (first,second) to 
     # corresponding .sam files, then store both mapped sam files in an hdf5 file (outfile)
-	def map_reads(first_fq,second_fq,outfile):
-	    min_len, step_size = calculate_step(length - seq_skip_start, min_map_len)
-	    first_sam = first_fq.split(".fastq.gz")[0] + ".sam"
-	    second_sam = second_fq.split(".fastq.gz")[0] + ".sam"
+def map_reads(first_fq,second_fq,outfile):
+	min_len, step_size = calculate_step(length - seq_skip_start, min_map_len)
+	first_sam = first_fq.split(".fastq.gz")[0] + ".sam"
+	second_sam = second_fq.split(".fastq.gz")[0] + ".sam"
 
-	    # map the fastq files -> sam files
-		mapping.iterative_mapping(
-			bowtie_path = bowtie_path,
-			bowtie_index_path = bowtie_index,
-			fastq_path=first_fq,
-			out_sam_path=os.path.join(args.samdir,first_sam),
-			min_seq_len=min_len,
-			len_steps=step_size,
-			seq_start=seq_skip_start,
-			nthreads=threads,
-			bowtie_flags=bowtie_flags)
+	# map the fastq files -> sam files
+	mapping.iterative_mapping(
+	bowtie_path = bowtie_path,
+	bowtie_index_path = bowtie_index,
+	fastq_path=first_fq,
+	out_sam_path=os.path.join(args.samdir,first_sam),
+	min_seq_len=min_len,
+	len_steps=step_size,
+	seq_start=seq_skip_start,
+	nthreads=threads,
+	bowtie_flags=bowtie_flags)
 
-		mapping.iterative_mapping(
-			bowtie_path = bowtie_path,
-			bowtie_index_path = bowtie_index,
-			fastq_path=second_fq,
-			out_sam_path=os.path.join(args.samdir,second_sam),
-			min_seq_len=min_len,
-			len_steps=step_size,
-			seq_start=seq_skip_start,
-			nthreads=threads,
-			bowtie_flags=bowtie_flags)
+	mapping.iterative_mapping(
+	bowtie_path = bowtie_path,
+	bowtie_index_path = bowtie_index,
+	fastq_path=second_fq,
+	out_sam_path=os.path.join(args.samdir,second_sam),
+	min_seq_len=min_len,
+	len_steps=step_size,
+	seq_start=seq_skip_start,
+	nthreads=threads,
+	bowtie_flags=bowtie_flags)
 
-		# parse the mapped sequences into a Python data structure,
-        # assign the ultra-sonic fragments to restriction fragments. <- what the hell does this even mean?
-        mapped_reads = h5dict.h5dict(outfile)
-        sf1, sf2 = [os.path.join(args.samdir,first_sam), os.path.join(args.samdir,second_sam)]
-        mapping.parse_sam(sam_basename1=sf1, sam_basename2=sf2,
-            out_dict=mapped_reads, genome_db=genome_db, save_seqs=False, maxReads=10000000, IDLen=50)
+	# parse the mapped sequences into a Python data structure,
+	# assign the ultra-sonic fragments to restriction fragments. <- what the hell does this even mean?
+	mapped_reads = h5dict.h5dict(outfile)
+	sf1, sf2 = [os.path.join(args.samdir,first_sam), os.path.join(args.samdir,second_sam)]
+	mapping.parse_sam(sam_basename1=sf1, sam_basename2=sf2,
+	out_dict=mapped_reads, genome_db=genome_db, save_seqs=False, maxReads=10000000, IDLen=50)
 
 
 if __name__ == "__main__":
