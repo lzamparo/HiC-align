@@ -37,12 +37,12 @@ def calculate_step(length, minlen, approxStep=10, maxSteps=4):
 # quick sanity check on a given fastq file.  The second line should contain a non-zero length
 def check_len(fastq_file):
 	f = gzip.open(fastq_file, 'r')
-    f.readline()
-    length = len(f.readline()) - 1
-    if length < 10:
-    	raise ValueError("Length of your sequence is {0}. Something is wrong ".format(length))
-    else:
-    	return length
+	f.readline()
+	length = len(f.readline()) - 1
+	if length < 10:
+		raise ValueError("Length of your sequence is {0}. Something is wrong ".format(length))
+	else:
+		return length
 
 
 
