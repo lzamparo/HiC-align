@@ -125,7 +125,7 @@ if __name__ == "__main__":
 	first_ends.sort()
 	second_ends.sort()
 	
-	outfiles = [f.split("_R1_")[0] + (f.split("_R1")[1]).split(".fastq.gz")[0] + ".hdf5" for f in r_one]
+	outfiles = [f.split("_R1_")[0] + (f.split("_R1")[1]).split(".fastq.gz")[0] + ".hdf5" for f in first_ends]
 
 	# map the reads in parallel:
 	Parallel(n_jobs=8)(delayed(map_reads)(p,q,outf) for p,q,outf in zip(first_ends,second_ends,outfiles))
