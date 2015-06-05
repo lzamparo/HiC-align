@@ -78,7 +78,8 @@ def map_reads(first_fq,second_fq,outfile):
 
 	# parse the mapped sequences into a Python data structure,
 	# assign the ultra-sonic fragments to restriction fragments. <- what the hell does this even mean?
-	mapped_reads = h5dict.h5dict(outfile)
+	out_dict = os.path.join(args.samdir,outfile)
+	mapped_reads = h5dict.h5dict(out_dict)
 	sf1, sf2 = [os.path.join(args.samdir,first_sam), os.path.join(args.samdir,second_sam)]
 	mapping.parse_sam(sam_basename1=sf1, sam_basename2=sf2,
 	out_dict=mapped_reads, genome_db=genome_db, save_seqs=False, maxReads=10000000, IDLen=50)
