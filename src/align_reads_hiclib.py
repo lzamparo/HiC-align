@@ -58,16 +58,15 @@ def map_reads(first_fq,second_fq,outfile):
 	# map the first fastq file -> sam file
 	length = check_len(first_fq)
 	min_len, step_size = calculate_step(length - seq_skip_start, min_map_len)
-	mapping.iterative_mapping(
-	bowtie_path = bowtie_path,
-	bowtie_index_path = bowtie_index,
-	fastq_path=first_fq,
-	out_sam_path=os.path.join(args.samdir,first_sam),
-	min_seq_len=min_len,
-	len_steps=step_size,
-	seq_start=seq_skip_start,
-	nthreads=threads,
-	bowtie_flags=bowtie_flags)
+	mapping.iterative_mapping(bowtie_path = bowtie_path,
+		bowtie_index_path = bowtie_index,
+		fastq_path=first_fq,
+		out_sam_path=os.path.join(args.samdir,first_sam),
+		min_seq_len=min_len,
+		len_step=step_size,
+		seq_start=seq_skip_start,
+		nthreads=threads,
+		bowtie_flags=bowtie_flags)
 
 	# map the second fastq file -> sam file
 	length = check_len(second_fq)
@@ -78,7 +77,7 @@ def map_reads(first_fq,second_fq,outfile):
 	fastq_path=second_fq,
 	out_sam_path=os.path.join(args.samdir,second_sam),
 	min_seq_len=min_len,
-	len_steps=step_size,
+	len_step=step_size,
 	seq_start=seq_skip_start,
 	nthreads=threads,
 	bowtie_flags=bowtie_flags)
