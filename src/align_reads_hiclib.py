@@ -49,11 +49,12 @@ def check_len(fastq_file):
 # map the reads from each paired end reads fastq file (first,second) to 
 # corresponding .sam files, then store both mapped sam files in an hdf5 file (outfile)
 def map_reads(first_fq,second_fq,outfile):
-	min_len, step_size = calculate_step(length - seq_skip_start, min_map_len)
 	first_sam = first_fq.split(".fastq.gz")[0] + ".sam"
 	second_sam = second_fq.split(".fastq.gz")[0] + ".sam"
 
-	# map the fastq files -> sam files
+	# map the first fastq file -> sam file
+	length = check_len(first_fq)
+	min_len, step_size = calculate_step(length - seq_skip_start, min_map_len)
 	mapping.iterative_mapping(
 	bowtie_path = bowtie_path,
 	bowtie_index_path = bowtie_index,
@@ -65,6 +66,9 @@ def map_reads(first_fq,second_fq,outfile):
 	nthreads=threads,
 	bowtie_flags=bowtie_flags)
 
+	# map the second fastq file -> sam file
+	length = check_len(second_fq)
+	min_len, step_size = calculate_step(length - seq_skip_start, min_map_len)
 	mapping.iterative_mapping(
 	bowtie_path = bowtie_path,
 	bowtie_index_path = bowtie_index,
@@ -76,7 +80,7 @@ def map_reads(first_fq,second_fq,outfile):
 	nthreads=threads,
 	bowtie_flags=bowtie_flags)
 
-	# parse the mapped sequences into a Python data structure,
+	# parse the mapped sequences into a the hdf5 dict structure,
 	# assign the ultra-sonic fragments to restriction fragments. <- what the hell does this even mean?
 	out_dict = os.path.join(args.samdir,outfile)
 	mapped_reads = h5dict.h5dict(out_dict)
