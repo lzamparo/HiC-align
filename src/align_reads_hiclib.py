@@ -106,6 +106,10 @@ if __name__ == "__main__":
 	# find bowtie2, and genome index
 	bowtie_path = subprocess.check_output("which bowtie2", shell=True)
 	bowtie_path = bowtie_path.strip()
+	
+	# Their bowtieIndex seems finicky
+	# e.g bowtieIndex = "../bin/bowtie2/index/{0}".format(genomeName)  # change this if your index is named differently from the genome
+
 	bowtie_index = args.index # change this if your index is named differently from the genome
 	bowtie_flags = "--very-sensitive"
 
