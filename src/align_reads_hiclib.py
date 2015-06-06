@@ -4,6 +4,7 @@ import argparse
 import subprocess
 import glob
 import gzip
+import numpy as np
 
 from joblib import Parallel, delayed
 
