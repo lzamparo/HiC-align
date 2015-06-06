@@ -3,6 +3,8 @@ import logging
 import argparse
 import subprocess
 import glob
+import gzip
+
 from joblib import Parallel, delayed
 
 try:
