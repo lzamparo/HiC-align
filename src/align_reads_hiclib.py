@@ -142,7 +142,7 @@ if __name__ == "__main__":
     outfiles = [f.split("_R1_")[0] + (f.split("_R1")[1]).split(".fastq.gz")[0] + ".hdf5" for f in first_ends]
 
     # apply a niceness value to this process and each sub-process
-    niceness = [args.nice for i in len(outfiles)]
+    niceness = [args.nice for i in outfiles]
 
     # map the reads in parallel:
     Parallel(n_jobs=4)(delayed(map_reads)(p, q, outf, nice) for p, q, outf, nice in zip(first_ends, second_ends, outfiles, niceness))
