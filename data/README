@@ -1,3 +1,6 @@
 Data directory for storing fixed data sets
 
 - added symbolic links to reference genome, replicate read directories
+- created runs.tsv file to describe HiC run data stored in this project, to be processed later into a datasets.tsv file that catalogues
+all the h5 files for each replicate
+- dataset.tsv should be generated from running src/generate_datasets_file.py on data/runs.tsv

@@ -1,0 +1,4 @@
+# describes format of experimental data, to be parsed into dataset.tsv file by a later script
+# directory	experiment	replicate	genome	restriction_enzyme
+Sample_HiC_LY1_1/sam_files/	Martin	R1 	hg19	HindIII
+Sample_HiC_LY1_2/sam_files/	Martin	R1	hg19	HindIII
