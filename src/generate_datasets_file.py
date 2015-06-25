@@ -35,8 +35,8 @@ runs_file.close()
 datasets_file = open(os.path.join(args.basedir,args.datafile),"w")
 
 # print header for datasets file
-datasets_file.write("The file has the following structure:\n")
-datasets_file.write("Filename    Experiment  Replicate   Genome  RestrictionEnzyme\n")
+datasets_file.write("# The file has the following structure:\n")
+datasets_file.write("# Filename    Experiment  Replicate   Genome  RestrictionEnzyme\n")
 
 for run in runs:
     input_dir, experiment, replicate, genome, restriction_enzyme = run
@@ -50,7 +50,7 @@ for run in runs:
             raise
         if len(mydict.get_dataset("strands1")) < 10000:
             raise
-        datasets_file.write("{0} {1} {2} {3} {4}\n".format(os.path.join(input_dir,fname),experiment,
+        datasets_file.write("{0}\t{1}\t{2}\t{3}\t{4}\n".format(os.path.join(input_dir,fname),experiment,
                                                     replicate, genome, restriction_enzyme))
 
 datasets_file.close()
