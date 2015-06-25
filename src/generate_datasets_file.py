@@ -34,6 +34,10 @@ runs_file.close()
 # process each record in the runs file, write out to the data sets file
 datasets_file = open(os.path.join(args.basedir,args.datafile),"w")
 
+# print header for datasets file
+datasets_file.write("The file has the following structure:\n")
+datasets_file.write("Filename    Experiment  Replicate   Genome  RestrictionEnzyme\n")
+
 for run in runs:
     input_dir, experiment, replicate, genome, restriction_enzyme = run
     filenames = [j for j in os.listdir(os.path.join(args.basedir,input_dir)) if j.endswith(".hdf5") ]
