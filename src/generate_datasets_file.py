@@ -36,7 +36,7 @@ datasets_file = open(os.path.join(args.basedir,args.datafile),"w")
 
 # print header for datasets file
 datasets_file.write("# The file has the following structure:\n")
-datasets_file.write("# Filename    Experiment  Replicate   Genome  RestrictionEnzyme\n")
+datasets_file.write("# Filename\tExperiment\tReplicate\tGenome\tRestrictionEnzyme\n")
 
 for run in runs:
     input_dir, experiment, replicate, genome, restriction_enzyme = run
