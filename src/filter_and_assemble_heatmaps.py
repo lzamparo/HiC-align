@@ -31,12 +31,15 @@ Warnings:
 """
 
 from hiclib.fragmentHiC import HiCdataset
-from mirnylib.systemutils import fmap,setExceptionHook
-import numpy as np 
+from mirnylib.systemutils import fmap, setExceptionHook
+import numpy as np
 import os
 from argparse import ArgumentParser
 
+from joblib import Parallel, delayed
+
 setExceptionHook()
+
 
 def ensure(f):
     d = os.path.dirname(f)
@@ -49,35 +52,76 @@ def ensure(f):
             raise ValueError("Cannot create directory")
     return f
 
+
 def genomeFolder(name):
     return os.path.join("/home/zamparol/data", name)  # Fetch genome folder by genome name
 
 ### LZ: original script parameters, I'll set my own
-whole_genome_resolutions_Kb = [] #[2000,1000,500,200]
+whole_genome_resolutions_Kb = []  # [2000,1000,500,200]
 by_chromosome_resolutions_Kb = [100, 40]
-hi_res_with_overlap_resolutions_Kb = [] #[20,10]        #add 10 here if you have more than 16GB RAM
-super_hi_res_with_overlap_resolutions_Kb = []# [5]
-skip = 1                                                #how many to skip for single replica datasets
+hi_res_with_overlap_resolutions_Kb = []  # [20,10]        #add 10 here if you have more than 16GB RAM
+super_hi_res_with_overlap_resolutions_Kb = []  # [5]
+skip = 1  # how many to skip for single replica datasets
 
 
-#wholeGenomeResolutionsKb = [2000,1000,500,200]
-#byChromosomeResolutionsKb = [100, 40]
-#HiResWithOverlapResolutionsKb = [20,10]     #add 10 here if you have more than 16GB RAM
-#SuperHiResWithOverlapResolutionsKb = [5]
-#skip = 1                                    #how many to skip for single replica datasets
+# wholeGenomeResolutionsKb = [2000,1000,500,200]
+# byChromosomeResolutionsKb = [100, 40]
+# HiResWithOverlapResolutionsKb = [20,10]     #add 10 here if you have more than 16GB RAM
+# SuperHiResWithOverlapResolutionsKb = [5]
+# skip = 1                                    #how many to skip for single replica datasets
 
 
-
-def refineDataset(filenames, niceval, create=True, delete=True, parseInMemory=True):
+def parse_mapped_reads(onename, niceval, working_genome, enzyme, stat_folder, in_memory):
     """
+    Parse the given h5 mapped reads, output to a partial fragment file.
+
+    :param onename: (string) the name of this fragment
+    :param niceval: (int) positive int to rank the priority of this job
+    :param working_genome: (string) name of the genome aganist which we mapped the reads
+    :param enzyme: (string) name of the restriction enzyme used to cut fragments
+    :param stat_folder: (string) folder in which to write fragment mapping stats
+    :return: none explicit, h5 file is saved to disk
+    """
+
+    # set the niceness of this sub-process:
+    os.nice(niceval)
+
+    np.random.seed()
+    # Parsing individual files, either in memory or on disk
+    if in_memory:
+        finalname = onename + "_parsed.frag"
+        TR = HiCdataset("bla" + str(np.random.randint(100000000000)), genome=genomeFolder(working_genome),
+                        maximumMoleculeLength=500, enzymeName=enzyme, tmpFolder="tmp",
+                        inMemory=True)  # remove inMemory if you don't have enough RAM
+
+        TR.parseInputData(dictLike=onename)
+        print onename
+        TR.save(ensure(finalname))
+        folder, fname = os.path.split(onename)
+        statSubFolder = os.path.join(stat_folder, folder)
+
+        TR.printMetadata(saveTo=ensure(os.path.join(statSubFolder, fname + ".stat")))
+    else:
+        # Create dataset at destination, parse on HDD, then no need to save.
+        TR = HiCdataset(ensure(onename + "_parsed.frag"),
+                        genome=genomeFolder(working_genome), enzymeName=enzyme, tmpFolder="tmp",
+                        maximumMoleculeLength=500, mode='w')
+        TR.parseInputData(dictLike=onename, enzymeToFillRsites=enzyme)
+        TR.printMetadata(saveTo=ensure(os.path.join(stat_folder, onename + ".stat")))
+
+
+
+
+def refineDataset(filenames, niceval, delete=True, parse_in_memory=True):
+    """
+    Map the fragments from each replicate to chromosomes (in parallel)
+
     Parameters
     ----------
-
     filenames[0] is a list of filenames of incoming files
     filenames[1] is a folder for outgoing file
     filenames[2] is a working genome, that is output directory
     filenames[3] is an enzyme for a given experiment
-
 
     create : bool, optional
         If True, parse each file.
@@ -88,102 +132,71 @@ def refineDataset(filenames, niceval, create=True, delete=True, parseInMemory=Tr
         Man, these files may be huge... if you don't have a 10TB RAID, this may be useful.
     parseInMemory : bool, optional
         Perform parsing input files in memory.
-
     """
-
-    # set the niceness of this sub-process:
-    os.nice(niceval)
 
     in_files = filenames[0]
     out_file = filenames[1]
 
-    statFolder = os.path.join("statistics", out_file)
+    stat_folder = os.path.join("statistics", out_file)
 
-    workingGenome = filenames[2]
+    working_genome = filenames[2]
     enzyme = filenames[3]
 
-    if create == True:  # if we need to parse the input files (.hdf5 from mapping).
-        def parse_onename(onename):
-            np.random.seed()
-            #Parsing individual files
-            if parseInMemory == True:
-                finalname = onename + "_parsed.frag"
-                #if not os.path.exists(finalname):
-                if True:
+    nice_list = [niceval for i in in_files]
+    parse_list = [parse_in_memory for i in in_files]
+    genome_list = [working_genome for i in in_files]
+    enzyme_list = [enzyme for i in in_files]
+    stat_folder_list = [stat_folder for i in in_files]
 
-                    #create dataset in memory, parse and then save to destination
-                    TR = HiCdataset("bla" + str(np.random.randint(100000000000)), genome=genomeFolder(workingGenome),
-                                    maximumMoleculeLength=500,enzymeName = enzyme,tmpFolder = "tmp",
-                                    inMemory=True)  # remove inMemory if you don't have enough RAM
+    #map(parse_onename, in_files)
+    Parallel(n_jobs=20)(delayed(parse_mapped_reads)(infile, nice_val, genome, enzyme, stat_folder, parse_val) for infile, nice_val, genome, enzyme, stat_folder, parse_val in
+               zip(in_files, nice_list, genome_list, enzyme_list, stat_folder_list, parse_list))
 
-                    TR.parseInputData(dictLike=onename)
-                    folder = os.path.split(onename)[0]
-                    print onename
-                    TR.save(ensure(finalname))
-                    folder, fname = os.path.split(onename)
-                    statSubFolder = os.path.join(statFolder, folder)
-                   
+    # Merge in all parsed files from one experiment
+    print "Merging files alltogether, applying filters"
+    TR = HiCdataset(ensure(out_file + "_merged.frag"),
+                    genome=genomeFolder(working_genome), enzymeName=enzyme, tmpFolder="tmp", dictToStoreIDs="h5dict",
+                    mode="w")
+    TR.merge([i + "_parsed.frag" for i in in_files])
 
-                    TR.printMetadata(saveTo=ensure(os.path.join(statSubFolder, fname + ".stat")))
-                else:
-                    print "skipping parsed: ", onename
-            else:
-                #Create dataset at destination, parse on HDD, then no need to save.
-                TR = HiCdataset(ensure(onename + "_parsed.frag"),
-                                genome=genomeFolder(workingGenome),enzymeName = enzyme,tmpFolder = "tmp",
-                                maximumMoleculeLength=500, mode='w')
-                TR.parseInputData(dictLike=onename, enzymeToFillRsites=enzyme)
-                TR.printMetadata(saveTo=ensure(os.path.join(statFolder, onename + ".stat")))
-        map(parse_onename, in_files)
-        print "Merging files alltogether, applying filters"
-        TR = HiCdataset(ensure(out_file + "_merged.frag"),
-                        genome=genomeFolder(workingGenome),enzymeName = enzyme,tmpFolder = "tmp",dictToStoreIDs="h5dict",
-                        mode="w")
-        TR.merge([i + "_parsed.frag" for i in in_files])
-            #Merge in all parsed files from one experiment
+    if delete:  # cleaning up parsed files
+        for delFile in [i + "_parsed.frag" for i in in_files]:
+            os.remove(delFile)
 
-        if delete == True:  # cleaning up parsed files
-            for delFile in [i + "_parsed.frag" for i in in_files]:
-                os.remove(delFile)
+    print "Now opening new dataset for refined data, and performing all the filtering "
+    TR = HiCdataset(out_file + "_refined.frag", enzymeName=enzyme,
+                    genome=genomeFolder(working_genome), tmpFolder="tmp", dictToStoreIDs="h5dict",
+                    mode='w')
+    TR.load(out_file + "_merged.frag")
 
-        print "Now opening new dataset for refined data, and performing all the filtering "
-        TR = HiCdataset(out_file + "_refined.frag",enzymeName = enzyme,
-                        genome=genomeFolder(workingGenome),tmpFolder = "tmp",dictToStoreIDs="h5dict",
-                        mode='w')
-        TR.load(out_file + "_merged.frag")
+    # ----------------------------Set of filters applied -------------
+    TR.filterDuplicates()
+    # TR.save(out_file+".dat")
+    TR.filterLarge(10000, 10)
+    TR.filterExtreme(cutH=0.001, cutL=0)
+    TR.writeFilteringStats()
+    TR.printMetadata(saveTo=stat_folder + ".stat")
 
-        #----------------------------Set of filters applied -------------
-        TR.filterDuplicates()
-        #TR.save(out_file+".dat")
-        TR.filterLarge(10000,10)
-        TR.filterExtreme(cutH=0.001, cutL=0)
-        TR.writeFilteringStats()
-        TR.printMetadata(saveTo=statFolder + ".stat")
-
-        #------------------------End set of filters applied----------
-
-    else:
-        #If merging & filters has already been done, just load files
-        TR = HiCdataset(out_file + "_working.frag",enzymeName = enzyme,
-                        mode='w', genome=genomeFolder(workingGenome))
-        TR.load(out_file + "_refined.frag")
-        TR.printMetadata(saveTo=statFolder + ".stat")
+    # ------------------------End set of filters applied----------
 
     print "----->Building Raw heatmap at different resolutions"
     TR.printStats()
     for res in whole_genome_resolutions_Kb:
-        TR.saveHeatmap(out_file + "-{0}k.hm".format(res), res*1000)
+        TR.saveHeatmap(out_file + "-{0}k.hm".format(res), res * 1000)
     for res in by_chromosome_resolutions_Kb:
-        TR.saveByChromosomeHeatmap(out_file + "-{0}k.byChr".format(res), res*1000)
+        TR.saveByChromosomeHeatmap(out_file + "-{0}k.byChr".format(res), res * 1000)
     for res in hi_res_with_overlap_resolutions_Kb[:-skip]:
-        TR.saveHiResHeatmapWithOverlaps(out_file + "-{0}k_HighRes.byChr".format(res), res*1000)        
+        TR.saveHiResHeatmapWithOverlaps(out_file + "-{0}k_HighRes.byChr".format(res), res * 1000)
     for res in super_hi_res_with_overlap_resolutions_Kb[:-skip]:
-        TR.saveSuperHighResMapWithOverlaps(out_file + "-{0}k_HighRes.byChr".format(res), res*1000)            
+        TR.saveSuperHighResMapWithOverlaps(out_file + "-{0}k_HighRes.byChr".format(res), res * 1000)
+
 
 
 # Begin parsing datasets.tsv here
+
 parser = ArgumentParser()
 parser.add_argument("datasets", help="use this datasets .tsv file")
+parser.add_argument("-n", "--niceness", default=10, help="nice value for subprocesses that use")
 args = parser.parse_args()
 
 fsplit = os.path.split(args.datasets)
@@ -192,7 +205,7 @@ if len(fsplit[0]) > 0:
 filename = fsplit[1]
 
 # Parse all lines
-data_file = open(filename,'r')
+data_file = open(filename, 'r')
 data_files = data_file.readlines()
 data_files = [line.strip() for line in data_files if not line.startswith("#")]
 data_file.close()
@@ -204,29 +217,27 @@ for line in data_files:
         raise
 
 # Experiment is defined by (experiment name, replicate name, genome, enzyme)
-experiment_names = {elem.split()[1:5] for elem in data_files}
+experiment_names = {tuple(elem.split()[1:5]) for elem in data_files}
 by_experiment = []
 combined_experiment_names = []
 
 for experiment in experiment_names:
     # experiment is HeLa,R1,hg19,HindIII
-    this_experiment_name,this_replicate,this_genome,this_enzyme = experiment
+    this_experiment_name, this_replicate, this_genome, this_enzyme = experiment
     # out_name is experiment-replicate-restriction-enzyme
-    filenames = [i[0] for i in data_files if (i.split()[1:5]) == experiment]
-    out_name = "-".join([this_experiment_name,this_replicate,this_enzyme])
+    filenames = [i.split()[0] for i in data_files if (i.split()[1:5]) == experiment]
+    out_name = "-".join([this_experiment_name, this_replicate, this_enzyme])
 
     # filenames, path to save, genome, enzyme
     by_experiment.append((filenames, os.path.join(this_genome, out_name), this_genome, this_enzyme))
     # merged files belonging to one expriment
-    combined_experiment_names.append((this_experiment_name, os.path.join(this_genome, out_name), this_genome, this_enzyme))
+    combined_experiment_names.append(
+        (this_experiment_name, os.path.join(this_genome, out_name), this_genome, this_enzyme))
 
-
-
-# apply a niceness value to this process and each sub-process
-niceness = [args.nice for i in by_experiment]
 
 # map the reads in parallel:
-Parallel(n_jobs=2)(delayed(refineDataset)(experiment, nice, create=True, delete=True) for experiment, nice in zip(by_experiment, niceness))
+for experiment, nice in zip(by_experiment, niceness):
+    refineDataset(experiment, nice, create = True, parse_in_memory= True)
 
 
 # TODO: cleaned up to here.  The refineDatasets function *should* produce chromosome by chromosome heatmaps
@@ -266,4 +277,3 @@ Parallel(n_jobs=2)(delayed(refineDataset)(experiment, nice, create=True, delete=
 #
 #         for res in super_hi_res_with_overlap_resolutions_Kb:
 #             TR.saveSuperHighResMapWithOverlaps(os.path.join(this_genome, "%s-all-%s-{0}k_SuperHighRes.byChr" % (experiment[0], experiment[2])).format(res), res*1000)
-
