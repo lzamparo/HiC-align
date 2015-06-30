@@ -30,8 +30,8 @@ Warnings:
 
 """
 
-from hiclib.fragmentHiC import HiCdataset
-from mirnylib.systemutils import fmap,setExceptionHook
+#from hiclib.fragmentHiC import HiCdataset
+#from mirnylib.systemutils import fmap,setExceptionHook
 import numpy as np 
 import os
 from argparse import ArgumentParser
@@ -194,7 +194,7 @@ filename = fsplit[1]
 # Parse all lines
 data_file = open(filename,'r')
 data_files = data_file.readlines()
-data_files = [line for line in data_files if not line.startswith("#")]
+data_files = [line.strip() for line in data_files if not line.startswith("#")]
 data_file.close()
 
 # Ensure each line has 5 fields
@@ -204,7 +204,7 @@ for line in data_files:
         raise
 
 # Experiment is defined by (experiment name, replicate name, genome, enzyme)
-experiment_names = set(elem.split()[1:5] for elem in data_files)
+experiment_names = {elem.split()[1:5] for elem in data_files}
 by_experiment = []
 combined_experiment_names = []
 
