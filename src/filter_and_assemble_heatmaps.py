@@ -238,7 +238,7 @@ for experiment in experiment_names:
 
 # map the reads in parallel:
 for experiment in by_experiment:
-    refine_dataset(experiment, args.niceness, create = True, parse_in_memory= True)
+    refine_dataset(experiment, args.niceness)
 
 
 # TODO: cleaned up to here.  The refineDatasets function *should* produce chromosome by chromosome heatmaps
