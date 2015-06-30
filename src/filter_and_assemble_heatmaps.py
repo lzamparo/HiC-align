@@ -9,7 +9,7 @@ This example script does the following:
 
 I'd like to do all steps save for the last one:
 
--Combines multiple replicas of the same experiment together, builds heatmaps
+- Combines multiple replicas of the same experiment together, builds heatmaps
 
 --Datasets are defined in the datasets.tsv file
 
@@ -34,10 +34,10 @@ from hiclib.fragmentHiC import HiCdataset
 from mirnylib.systemutils import fmap,setExceptionHook
 import numpy as np 
 import os
-import sys
 from argparse import ArgumentParser
 
 setExceptionHook()
+
 def ensure(f):
     d = os.path.dirname(f)
     if os.path.isdir(d):
