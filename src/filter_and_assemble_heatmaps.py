@@ -112,7 +112,7 @@ def parse_mapped_reads(onename, niceval, working_genome, enzyme, stat_folder, in
 
 
 
-def refineDataset(filenames, niceval, delete=True, parse_in_memory=True):
+def refine_dataset(filenames, niceval, delete=True, parse_in_memory=True):
     """
     Map the fragments from each replicate to chromosomes (in parallel)
 
@@ -153,7 +153,7 @@ def refineDataset(filenames, niceval, delete=True, parse_in_memory=True):
                zip(in_files, nice_list, genome_list, enzyme_list, stat_folder_list, parse_list))
 
     # Merge in all parsed files from one experiment
-    print "Merging files alltogether, applying filters"
+    print("Merging files all together, applying filters...")
     TR = HiCdataset(ensure(out_file + "_merged.frag"),
                     genome=genomeFolder(working_genome), enzymeName=enzyme, tmpFolder="tmp", dictToStoreIDs="h5dict",
                     mode="w")
@@ -162,38 +162,41 @@ def refineDataset(filenames, niceval, delete=True, parse_in_memory=True):
     if delete:  # cleaning up parsed files
         for delFile in [i + "_parsed.frag" for i in in_files]:
             os.remove(delFile)
-
-    print "Now opening new dataset for refined data, and performing all the filtering "
+    print("done!")
+    print("Filtering merged data...")
     TR = HiCdataset(out_file + "_refined.frag", enzymeName=enzyme,
                     genome=genomeFolder(working_genome), tmpFolder="tmp", dictToStoreIDs="h5dict",
                     mode='w')
     TR.load(out_file + "_merged.frag")
 
+
     # ----------------------------Set of filters applied -------------
     TR.filterDuplicates()
-    # TR.save(out_file+".dat")
     TR.filterLarge(10000, 10)
     TR.filterExtreme(cutH=0.001, cutL=0)
     TR.writeFilteringStats()
     TR.printMetadata(saveTo=stat_folder + ".stat")
-
+    print("done!")
     # ------------------------End set of filters applied----------
 
-    print "----->Building Raw heatmap at different resolutions"
+    print("Building heatmaps at specified resolutions...")
     TR.printStats()
     for res in whole_genome_resolutions_Kb:
         TR.saveHeatmap(out_file + "-{0}k.hm".format(res), res * 1000)
+
     for res in by_chromosome_resolutions_Kb:
         TR.saveByChromosomeHeatmap(out_file + "-{0}k.byChr".format(res), res * 1000)
+
     for res in hi_res_with_overlap_resolutions_Kb[:-skip]:
         TR.saveHiResHeatmapWithOverlaps(out_file + "-{0}k_HighRes.byChr".format(res), res * 1000)
+
     for res in super_hi_res_with_overlap_resolutions_Kb[:-skip]:
         TR.saveSuperHighResMapWithOverlaps(out_file + "-{0}k_HighRes.byChr".format(res), res * 1000)
+    print("done!")
 
 
 
-# Begin parsing datasets.tsv here
-
+### Script begins here ###
 parser = ArgumentParser()
 parser.add_argument("datasets", help="use this datasets .tsv file")
 parser.add_argument("-n", "--niceness", default=10, help="nice value for subprocesses that use")
@@ -204,7 +207,7 @@ if len(fsplit[0]) > 0:
     os.chdir(fsplit[0])
 filename = fsplit[1]
 
-# Parse all lines
+# Catalogue all .hdf5 bam file constructs to be binned and filtered
 data_file = open(filename, 'r')
 data_files = data_file.readlines()
 data_files = [line.strip() for line in data_files if not line.startswith("#")]
@@ -216,7 +219,7 @@ for line in data_files:
         print "incomplete line", line
         raise
 
-# Experiment is defined by (experiment name, replicate name, genome, enzyme)
+# Each experiment is defined by (experiment name, replicate name, genome, enzyme)
 experiment_names = {tuple(elem.split()[1:5]) for elem in data_files}
 by_experiment = []
 combined_experiment_names = []
@@ -225,19 +228,17 @@ for experiment in experiment_names:
     # experiment is HeLa,R1,hg19,HindIII
     this_experiment_name, this_replicate, this_genome, this_enzyme = experiment
     # out_name is experiment-replicate-restriction-enzyme
-    filenames = [i.split()[0] for i in data_files if (i.split()[1:5]) == experiment]
+    filenames = [i.split()[0] for i in data_files if tuple(i.split()[1:5]) == experiment]
     out_name = "-".join([this_experiment_name, this_replicate, this_enzyme])
 
     # filenames, path to save, genome, enzyme
     by_experiment.append((filenames, os.path.join(this_genome, out_name), this_genome, this_enzyme))
     # merged files belonging to one expriment
-    combined_experiment_names.append(
-        (this_experiment_name, os.path.join(this_genome, out_name), this_genome, this_enzyme))
-
+    combined_experiment_names.append((this_experiment_name, os.path.join(this_genome, out_name), this_genome, this_enzyme))
 
 # map the reads in parallel:
-for experiment, nice in zip(by_experiment, niceness):
-    refineDataset(experiment, nice, create = True, parse_in_memory= True)
+for experiment, nice in zip(by_experiment, args.niceness):
+    refine_dataset(experiment, nice, create = True, parse_in_memory= True)
 
 
 # TODO: cleaned up to here.  The refineDatasets function *should* produce chromosome by chromosome heatmaps
