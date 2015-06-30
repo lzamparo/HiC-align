@@ -30,8 +30,8 @@ Warnings:
 
 """
 
-#from hiclib.fragmentHiC import HiCdataset
-#from mirnylib.systemutils import fmap,setExceptionHook
+from hiclib.fragmentHiC import HiCdataset
+from mirnylib.systemutils import fmap,setExceptionHook
 import numpy as np 
 import os
 from argparse import ArgumentParser
