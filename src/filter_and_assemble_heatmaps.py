@@ -50,7 +50,7 @@ def ensure(f):
     return f
 
 def genomeFolder(name):
-    return os.path.join("/home/magus/HiC2011/data", name)  # Fetch genome folder by genome name
+    return os.path.join("/home/zamparol/data", name)  # Fetch genome folder by genome name
 
 ### LZ: original script parameters, I'll set my own
 whole_genome_resolutions_Kb = [] #[2000,1000,500,200]
