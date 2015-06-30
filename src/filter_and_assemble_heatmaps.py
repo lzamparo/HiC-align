@@ -53,11 +53,11 @@ def genomeFolder(name):
     return os.path.join("/home/magus/HiC2011/data", name)  # Fetch genome folder by genome name
 
 ### LZ: original script parameters, I'll set my own
-whole_genome_resolutions_Kb = [2000,1000,500,200]
+whole_genome_resolutions_Kb = [] #[2000,1000,500,200]
 by_chromosome_resolutions_Kb = [100, 40]
-hi_res_with_overlap_resolutions_Kb = [20,10]        #add 10 here if you have more than 16GB RAM
-super_hi_res_with_overlap_resolutions_Kb = [5]
-skip = 1                                            #how many to skip for single replica datasets
+hi_res_with_overlap_resolutions_Kb = [] #[20,10]        #add 10 here if you have more than 16GB RAM
+super_hi_res_with_overlap_resolutions_Kb = []# [5]
+skip = 1                                                #how many to skip for single replica datasets
 
 
 #wholeGenomeResolutionsKb = [2000,1000,500,200]
@@ -68,7 +68,7 @@ skip = 1                                            #how many to skip for single
 
 
 
-def refineDataset(filenames, create=True, delete=True, parseInMemory=True):
+def refineDataset(filenames, niceval, create=True, delete=True, parseInMemory=True):
     """
     Parameters
     ----------
@@ -90,6 +90,10 @@ def refineDataset(filenames, create=True, delete=True, parseInMemory=True):
         Perform parsing input files in memory.
 
     """
+
+    # set the niceness of this sub-process:
+    os.nice(niceval)
+
     in_files = filenames[0]
     out_file = filenames[1]
 
@@ -131,7 +135,7 @@ def refineDataset(filenames, create=True, delete=True, parseInMemory=True):
                 TR.parseInputData(dictLike=onename, enzymeToFillRsites=enzyme)
                 TR.printMetadata(saveTo=ensure(os.path.join(statFolder, onename + ".stat")))
         map(parse_onename, in_files)
-        "Merging files alltogether, applying filters"
+        print "Merging files alltogether, applying filters"
         TR = HiCdataset(ensure(out_file + "_merged.frag"),
                         genome=genomeFolder(workingGenome),enzymeName = enzyme,tmpFolder = "tmp",dictToStoreIDs="h5dict",
                         mode="w")
@@ -142,7 +146,7 @@ def refineDataset(filenames, create=True, delete=True, parseInMemory=True):
             for delFile in [i + "_parsed.frag" for i in in_files]:
                 os.remove(delFile)
 
-        "Now opening new dataset for refined data, and performing all the filtering "
+        print "Now opening new dataset for refined data, and performing all the filtering "
         TR = HiCdataset(out_file + "_refined.frag",enzymeName = enzyme,
                         genome=genomeFolder(workingGenome),tmpFolder = "tmp",dictToStoreIDs="h5dict",
                         mode='w')
@@ -214,40 +218,52 @@ for experiment in experiment_names:
     # filenames, path to save, genome, enzyme
     by_experiment.append((filenames, os.path.join(this_genome, out_name), this_genome, this_enzyme))
     # merged files belonging to one expriment
-    combined_experiment_names.append((experiment[0], os.path.join(this_genome, out_name), this_genome, this_enzyme))
+    combined_experiment_names.append((this_experiment_name, os.path.join(this_genome, out_name), this_genome, this_enzyme))
 
 
-# run refineDataset for each experiment
-for experiment in by_experiment:
-    refineDataset(experiment, create=True, delete=True)
+
+# apply a niceness value to this process and each sub-process
+niceness = [args.nice for i in by_experiment]
+
+# map the reads in parallel:
+Parallel(n_jobs=2)(delayed(refineDataset)(experiment, nice, create=True, delete=True) for experiment, nice in zip(by_experiment, niceness))
 
 
-##### TODO: cleaned up to here, need more work
+# TODO: cleaned up to here.  The refineDatasets function *should* produce chromosome by chromosome heatmaps
+# that can be examined later (somehow).
 
-# now merge different experiments alltogether
+# now merge different experiments all together
 # note that the first column is not here, as it is a replica
-experiments = set([(i[0], i[2], i[3]) for i in combined_experiment_names])
-print experiments
 
-for experiment in experiments:
-    this_genome = experiment[1]
-    myExperimentNames = [i[1] + "_refined.frag" for i in combined_experiment_names if (i[0], i[2], i[3]) == (experiment[0], experiment[1],experiment[2])]
-    assert len(myExperimentNames) > 0
-    if len(myExperimentNames) > 0:
-        #If we have more than one experiment (replica) for the same data, we can combine. 
-        TR = HiCdataset(os.path.join(this_genome, "%s-all-%s_refined.frag" %
-                                     (experiment[0],experiment[2])), genome=genomeFolder(this_genome),
-                                     enzymeName = experiment[2],tmpFolder = "tmp",dictToStoreIDs="h5dict")
-        statSaveName = os.path.join("statistics", this_genome, "%s-all-%s_refined.stat" % (experiment[0], experiment[2]))
-
-        TR.merge(myExperimentNames)
-        TR.printMetadata(saveTo=statSaveName)
-        for res in whole_genome_resolutions_Kb:
-            TR.saveHeatmap(os.path.join(this_genome, "%s-all-%s-{0}k.hm" % (experiment[0], experiment[2])).format(res), res*1000)
-        for res in by_chromosome_resolutions_Kb:
-            TR.saveByChromosomeHeatmap(os.path.join(this_genome, "%s-all-%s-{0}k.byChr" % (experiment[0], experiment[2])).format(res), res*1000)
-        for res in hi_res_with_overlap_resolutions_Kb:
-            TR.saveHiResHeatmapWithOverlaps(os.path.join(this_genome, "%s-all-%s-{0}k_HighRes.byChr" % (experiment[0], experiment[2])).format(res), res*1000)
-        for res in super_hi_res_with_overlap_resolutions_Kb:
-            TR.saveSuperHighResMapWithOverlaps(os.path.join(this_genome, "%s-all-%s-{0}k_SuperHighRes.byChr" % (experiment[0], experiment[2])).format(res), res*1000)
+# def extract_combined_experiment_fields(experiment):
+#     return ((experiment[0], experiment[2], experiment[3]))
+#
+# experiments = set([extract_combined_experiment_fields(i) for i in combined_experiment_names])
+#
+# for experiment in experiments:
+#     this_genome = experiment[1]
+#     myExperimentNames = [i[1] + "_refined.frag" for i in combined_experiment_names if (i[0], i[2], i[3]) == (experiment[0], experiment[1],experiment[2])]
+#     assert len(myExperimentNames) > 0
+#     if len(myExperimentNames) > 0:
+#         #If we have more than one experiment (replica) for the same data, we can combine.
+#         TR = HiCdataset(os.path.join(this_genome, "%s-all-%s_refined.frag" %
+#                                      (experiment[0],experiment[2])), genome=genomeFolder(this_genome),
+#                                      enzymeName = experiment[2],tmpFolder = "tmp",dictToStoreIDs="h5dict")
+#         statSaveName = os.path.join("statistics", this_genome, "%s-all-%s_refined.stat" % (experiment[0], experiment[2]))
+#
+#         TR.merge(myExperimentNames)
+#
+#         TR.printMetadata(saveTo=statSaveName)
+#
+#         for res in whole_genome_resolutions_Kb:
+#             TR.saveHeatmap(os.path.join(this_genome, "%s-all-%s-{0}k.hm" % (experiment[0], experiment[2])).format(res), res*1000)
+#
+#         for res in by_chromosome_resolutions_Kb:
+#             TR.saveByChromosomeHeatmap(os.path.join(this_genome, "%s-all-%s-{0}k.byChr" % (experiment[0], experiment[2])).format(res), res*1000)
+#
+#         for res in hi_res_with_overlap_resolutions_Kb:
+#             TR.saveHiResHeatmapWithOverlaps(os.path.join(this_genome, "%s-all-%s-{0}k_HighRes.byChr" % (experiment[0], experiment[2])).format(res), res*1000)
+#
+#         for res in super_hi_res_with_overlap_resolutions_Kb:
+#             TR.saveSuperHighResMapWithOverlaps(os.path.join(this_genome, "%s-all-%s-{0}k_SuperHighRes.byChr" % (experiment[0], experiment[2])).format(res), res*1000)
 
