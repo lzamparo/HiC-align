@@ -187,7 +187,7 @@ def refine_dataset(filenames, niceval, delete=True, parse_in_memory=True):
     for res in by_chromosome_resolutions_Kb:
         TR.saveByChromosomeHeatmap(out_file + "-{0}k.byChr".format(res), res * 1000)
 
-    for res in hi_res_with_overlap_resolutions_Kb[:-skip]:
+    for res in hi_res_with_overlap_resolutions_Kb:
         TR.saveHiResHeatmapWithOverlaps(out_file + "-{0}k_HighRes.byChr".format(res), res * 1000)
 
     for res in super_hi_res_with_overlap_resolutions_Kb[:-skip]:
