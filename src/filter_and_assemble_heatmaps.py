@@ -59,7 +59,7 @@ def genomeFolder(name):
 ### LZ: original script parameters, I'll set my own
 whole_genome_resolutions_Kb = []  # [2000,1000,500,200]
 by_chromosome_resolutions_Kb = [] # [100,40]
-hi_res_with_overlap_resolutions_Kb = [20,10]  # [20,10]        #add 10 here if you have more than 16GB RAM
+hi_res_with_overlap_resolutions_Kb = [80, 40]  # [20,10]        #add 10 here if you have more than 16GB RAM
 super_hi_res_with_overlap_resolutions_Kb = []  # [5]
 skip = 1  # how many to skip for single replica datasets
 
