@@ -5,5 +5,13 @@ Results directory for tracking computational experiments peformed on data
 - downloaded hg19 chromFa.tar.gz from UCSC
 - removed *random.fa, *hap?.fa, chrUn*.fa, chrM.fa
 - create whole genome fasta file: cat `ls -1v` > genome.fa
-- created an index using BWA: cd $PROJECT/data/hg19; bwa index -a bwtsw genome.fa
-- aligned reads to the index: 
+
+Sub-directories:
+
+- heatmaps: contain the heatmaps output from src/filter_and_assemble_heatmaps.py
+
+- fragments: contain the mapped fragments .hdf5 files output from src/filter_and_assemble_heatmaps.py
+
+- statistics: contains the output stats and debug info from the read mapping.
+
+

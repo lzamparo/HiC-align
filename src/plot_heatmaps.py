@@ -13,7 +13,7 @@ from scipy.stats import spearmanr as corr
 
 
 fragments_dir = "/Users/zamparol/projects/HiC-align/results/fragments"
-heatmaps_dir = "/Users/zamparol/projects/HiC-align/results/heatmaps/low_res_byChr"
+heatmaps_dir = "/Users/zamparol/projects/HiC-align/results/heatmaps/"
 hg19_dir = "/Users/zamparol/projects/HiC-align/data/hg19"
 
 '''Plots figure with correlation at different binning.
@@ -32,8 +32,8 @@ rep2_frags = fragmentHiC.HiCdataset("throw_away", hg19_dir, enzymeName="HindIII"
                               override=False, inMemory=True)
 rep2_frags.load(os.path.join(fragments_dir, "Martin-R2-HindIII_refined.frag"))
 
-heatmap_dict = {40000: ['Martin-R1-HindIII-40k_HighRes.byChr','Martin-R2-HindIII-40k_HighRes.byChr'],
-                80000: ['Martin-R1-HindIII-80k_HighRes.byChr','Martin-R2-HindIII-80k_HighRes.byChr']}
+heatmap_dict = {100000: ['Martin-R1-HindIII-100k.byChr','Martin-R2-HindIII-100k.byChr'],
+                200000: ['Martin-R1-HindIII-200k.hm','Martin-R2-HindIII-200k.hm']}
 
 def plot_diagonal_correlation(resolution):
     '''
@@ -47,7 +47,7 @@ def plot_diagonal_correlation(resolution):
     binned_data = binnedData(resolution, hg19_dir)
 
     # try to load the data
-    pair = [tuple(heatmap_dict[resolution])]
+    pair = tuple(heatmap_dict[resolution])
     for hm in heatmap_dict[resolution]:
         binned_data.simpleLoad(os.path.join(heatmaps_dir,hm),hm)
 
@@ -99,8 +99,8 @@ def plot_diagonal_correlation(resolution):
     plt.title("%s vs %s" % pair)
     # plt.plot(bands / 5., cors3[j], color="#E5A826", label="Iterative")
     # plt.plot(bands / 5., cors2[j], color="#28459A", label="Single")
-    plt.plot(bands, cors, color="#E55726", label="Raw")
-    plt.xlabel("Genomic Separation", fontsize=8)
+    plt.plot(bands / 10., cors, color="#E55726", label="Raw")
+    plt.xlabel("Genomic Separation, MB", fontsize=8)
     plt.ylabel("Spearman correlation", fontsize=8)
     plt.legend()
 
