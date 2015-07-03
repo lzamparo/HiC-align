@@ -240,7 +240,6 @@ for experiment in experiment_names:
 for experiment in by_experiment:
     refine_dataset(experiment, args.niceness)
 
-
 # TODO: cleaned up to here.  The refineDatasets function *should* produce chromosome by chromosome heatmaps
 # that can be examined later (somehow).
 
