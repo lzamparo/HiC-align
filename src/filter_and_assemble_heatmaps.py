@@ -237,8 +237,9 @@ for experiment in experiment_names:
     combined_experiment_names.append((this_experiment_name, os.path.join(this_genome, out_name), this_genome, this_enzyme))
 
 # map the reads in parallel:
-for experiment in by_experiment:
-    refine_dataset(experiment, args.niceness)
+#for experiment in by_experiment:
+#    refine_dataset(experiment, args.niceness)
+refine_dataset(by_experiment[1],args.niceness)
 
 # TODO: cleaned up to here.  The refineDatasets function *should* produce chromosome by chromosome heatmaps
 # that can be examined later (somehow).
