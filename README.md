@@ -17,8 +17,12 @@ reads to bins for all the files in the experiments.  The command I used is:
 
  `python generate_datasets_file.py -b ~/projects/HiC-align/data/ -r runs.tsv -d datasets.tsv`
 
-3. Filtering some reads TODO
+3. Run `filter_and_assemble_heatmaps.py` to filter some reads due to poor mapability or length (<10bp, >10kb),
+groupp the mapped reads into bins (at different resolutions), and output heatmaps. See the script for details.  
+This generates whole genome heatmaps at 200kb, 100kb resolutions, and per chromosome heatmaps at 100kb resolution.  
+'Resolution' here means mean bin size, I think.  The command I used is:
 
-4. Mapping reads, assembling heatmaps TODO
+`python filter_and_assemble_heatmaps.py ../data/dataset.tsv`
 
-5. Save heatmaps, one per chromosome per replicate TODO
+4. Run `plot_diagonal_correlation(200000)` from `plot_heatmaps.py` to visualize the Spearman correlation between both replicates 
+at different genomic distances.  

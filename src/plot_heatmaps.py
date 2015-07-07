@@ -21,8 +21,6 @@ Note the caching and creating of binned heatmaps flags below.
 Suppplementary paper figure
 '''
 
-resolutions = [40000, 80000]
-
 # load up both reps
 rep1_frags = fragmentHiC.HiCdataset("throw_away", hg19_dir, enzymeName="HindIII",
                               override=False, inMemory=True)
